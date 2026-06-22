@@ -16,7 +16,9 @@
 
     <div class="max-w-md mx-auto w-full space-y-4">
         <div class="bg-[#0f2c59] text-white rounded-3xl p-5 text-center shadow-md relative">
-            <a href="<a href="https://khemika-opd.github.io/OPD-Takhli-Digital-Toolkit/" class="absolute left-4 top-5 text-white/80 hover:text-white text-xs bg-white/10 px-3 py-1.5 rounded-full"><i class="fa-solid fa-arrow-left"></i> กลับ</a>" class="absolute left-4 top-5 text-white/80 hover:text-white text-xs bg-white/10 px-3 py-1.5 rounded-full"><i class="fa-solid fa-arrow-left"></i> กลับ</a>
+            <a href="https://khemika-opd.github.io/OPD-Takhli-Digital-Toolkit/digital_toolkit.html" class="absolute left-4 top-5 text-white/80 hover:text-white text-xs bg-white/10 px-3 py-1.5 rounded-full">
+                <i class="fa-solid fa-arrow-left"></i> กลับ
+            </a>
             <h1 class="text-lg font-bold tracking-tight uppercase"><i class="fa-solid fa-heart-pulse mr-1 text-cyan-400"></i> เครื่องมือคำนวณ HBPM</h1>
             <p class="text-[11px] font-medium opacity-80">ระบบประเมินค่าเฉลี่ยความดันที่บ้าน (จุดคัดกรอง OPD)</p>
         </div>
@@ -62,7 +64,6 @@
     </div>
 
     <script>
-        // ใช้ Array เก็บในหน่วยความจำชั่วคราว (Ram) ไม่ลงทะเบียนถาวร เพื่อเปิดทางให้เคลียร์ทิ้งง่ายๆ
         let currentRecords = [];
 
         function addEntry() {
@@ -73,14 +74,11 @@
                 const s = parseInt(sysVal);
                 const d = parseInt(diaVal);
 
-                // บันทึกเข้าคลังชั่วคราว
                 currentRecords.push({ s: s, d: d });
                 
-                // คำนวณหาค่าเฉลี่ยใหม่ทันที
                 calculateAverage();
                 renderLocalList();
 
-                // ล้างค่าในกล่องพิมพ์ออกรอคีย์ค่าถัดไปของคนไข้คนเดิม
                 document.getElementById('sysIn').value = '';
                 document.getElementById('diaIn').value = '';
                 document.getElementById('sysIn').focus();
@@ -99,7 +97,6 @@
             document.getElementById('avgDisplay').innerText = `${avgSys}/${avgDia}`;
             document.getElementById('countRecords').innerText = `จำนวนบันทึกปัจจุบัน: ${currentRecords.length} ค่า`;
 
-            // ส่งค่าเฉลี่ยไปประเมินเกณฑ์พิกัดสัญญาณไฟสี
             evaluateMetrics(avgSys, avgDia);
         }
 
@@ -137,7 +134,6 @@
             `).reverse().join('');
         }
 
-        // 🌟 ฟังก์ชันสำคัญ: ลบจบในคลิกเดียว ล้างไพ่ต้อนรับผู้ป่วยรายต่อไปทันที
         function clearAllData() {
             currentRecords = [];
             document.getElementById('avgDisplay').innerText = "--/--";

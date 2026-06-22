@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Takhli HBPM Calculator - Screen Target</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap');
+        body { font-family: 'Kanit', sans-serif; background: #f0f4f8; color: #0f2c59; }
+        .glass-card { background: #ffffff; border: 1px solid #dbeafe; box-shadow: 0 10px 25px rgba(15, 44, 89, 0.05); }
+    </style>
+</head>
+<body class="p-4 min-height-vh flex flex-col justify-between">
+
+    <div class="max-w-md mx-auto w-full space-y-4">
+        <div class="bg-[#0f2c59] text-white rounded-3xl p-5 text-center shadow-md relative">
+            <a href="digital_toolkit.html" class="absolute left-4 top-5 text-white/80 hover:text-white text-xs bg-white/10 px-3 py-1.5 rounded-full"><i class="fa-solid fa-arrow-left"></i> กลับ</a>
+            <h1 class="text-lg font-bold tracking-tight uppercase"><i class="fa-solid fa-heart-pulse mr-1 text-cyan-400"></i> เครื่องมือคำนวณ HBPM</h1>
+            <p class="text-[11px] font-medium opacity-80">ระบบประเมินค่าเฉลี่ยความดันที่บ้าน (จุดคัดกรอง OPD)</p>
+        </div>
+
+        <div class="glass-card rounded-[2rem] p-5 space-y-4">
+            <div class="text-center bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-inner">
+                <p class="text-xs uppercase font-bold tracking-wider text-slate-500 mb-1">📊 สรุปผลค่าเฉลี่ยความดันโลหิต</p>
+                <p id="avgDisplay" class="text-4xl font-extrabold text-teal-600 font-mono tracking-tight">--/--</p>
+                <p id="countRecords" class="text-[10px] text-slate-400 mt-1 font-bold">จำนวนบันทึกปัจจุบัน: 0 ค่า</p>
+            </div>
+
+            <div class="flex gap-3">
+                <input type="number" id="sysIn" placeholder="ตัวบน (SYS)" class="w-1/2 rounded-2xl p-3.5 text-center text-xl font-bold border-2 border-blue-200 outline-none focus:border-blue-500 bg-teal-50/50">
+                <input type="number" id="diaIn" placeholder="ตัวล่าง (DIA)" class="w-1/2 rounded-2xl p-3.5 text-center text-xl font-bold border-2 border-blue-200 outline-none focus:border-blue-500 bg-teal-50/50">
+            </div>
+
+            <div class="flex gap-2.5">
+                <button onclick="addEntry()" class="flex-1 bg-gradient-to-r from-[#0f2c59] to-[#1a73e8] text-white p-3.5 rounded-2xl text-sm font-bold shadow-md hover:opacity-90 active:scale-95 transition-all">
+                    <i class="fa-solid fa-plus mr-1"></i> เพิ่มและคำนวณ
+                </button>
+                <button onclick="clearAllData()" class="w-1/4 bg-red-100 border border-red-300 text-red-600 p-3.5 rounded-2xl text-sm font-bold shadow-sm hover:bg-red-200 active:scale-95 transition-all" title="เคลียร์ข้อมูลคนไข้รายนี้">
+                    <i class="fa-solid fa-trash-can"></i> ลบจบ
+                </button>
+            </div>
+
+            <div id="evalArea" class="hidden p-4 rounded-2xl border text-left space-y-1.5 transition-all">
+                <div id="evalStatus" class="font-bold text-sm"></div>
+                <div id="evalAdvice" class="text-xs leading-relaxed opacity-95"></div>
+            </div>
+        </div>
+
+        <div class="glass-card rounded-[2rem] p-4">
+            <p class="text-[11px] font-bold text-slate-400 mb-2"><i class="fa-solid fa-clock-rotate-left mr-1"></i> รายการค่าที่นำมาคำนวณรอบนี้:</p>
+            <div id="historyList" class="space-y-1.5 max-h-40 overflow-y-auto">
+                <p class="text-center text-[11px] text-slate-400 italic py-2">ยังไม่มีการเพิ่มข้อมูล</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-6 text-slate-400 text-[10px]">
+        <p class="font-bold">Khemika-OPD Takhli</p>
+        <p class="italic">Smart Clinical Decision Support System © 2026</p>
+    </div>
+
+    <script>
+        // ใช้ Array เก็บในหน่วยความจำชั่วคราว (Ram) ไม่ลงทะเบียนถาวร เพื่อเปิดทางให้เคลียร์ทิ้งง่ายๆ
+        let currentRecords = [];
+
+        function addEntry() {
+            const sysVal = document.getElementById('sysIn').value;
+            const diaVal = document.getElementById('diaIn').value;
+
+            if (sysVal && diaVal) {
+                const s = parseInt(sysVal);
+                const d = parseInt(diaVal);
+
+                // บันทึกเข้าคลังชั่วคราว
+                currentRecords.push({ s: s, d: d });
+                
+                // คำนวณหาค่าเฉลี่ยใหม่ทันที
+                calculateAverage();
+                renderLocalList();
+
+                // ล้างค่าในกล่องพิมพ์ออกรอคีย์ค่าถัดไปของคนไข้คนเดิม
+                document.getElementById('sysIn').value = '';
+                document.getElementById('diaIn').value = '';
+                document.getElementById('sysIn').focus();
+            }
+        }
+
+        function calculateAverage() {
+            if (currentRecords.length === 0) return;
+
+            const totalSys = currentRecords.reduce((sum, item) => sum + item.s, 0);
+            const totalDia = currentRecords.reduce((sum, item) => sum + item.d, 0);
+            
+            const avgSys = Math.round(totalSys / currentRecords.length);
+            const avgDia = Math.round(totalDia / currentRecords.length);
+
+            document.getElementById('avgDisplay').innerText = `${avgSys}/${avgDia}`;
+            document.getElementById('countRecords').innerText = `จำนวนบันทึกปัจจุบัน: ${currentRecords.length} ค่า`;
+
+            // ส่งค่าเฉลี่ยไปประเมินเกณฑ์พิกัดสัญญาณไฟสี
+            evaluateMetrics(avgSys, avgDia);
+        }
+
+        function evaluateMetrics(sys, dia) {
+            const area = document.getElementById('evalArea');
+            const status = document.getElementById('evalStatus');
+            const advice = document.getElementById('evalAdvice');
+            area.classList.remove('hidden');
+
+            if (sys >= 135 || dia >= 85) {
+                area.className = "p-4 rounded-2xl border border-red-400 bg-red-50 text-left space-y-1";
+                status.className = "font-bold text-sm text-red-600 flex items-center gap-1";
+                status.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> ค่าเฉลี่ยเกินเกณฑ์เป้าหมายบ้าน (&ge;135/85)";
+                advice.innerHTML = "• <b>แผนการพยาบาล:</b> รายงานแพทย์/NP ประเมินภาวะ Uncontrolled HT เพื่อพิจารณาปรับระดับยา หรือหาสาเหตุร่วม";
+            } else {
+                area.className = "p-4 rounded-2xl border border-green-400 bg-green-50 text-left space-y-1";
+                status.className = "font-bold text-sm text-green-600 flex items-center gap-1";
+                status.innerHTML = "<i class='fa-solid fa-circle-check'></i> ค่าเฉลี่ยอยู่ในเกณฑ์ควบคุมได้ดี (&lt;135/85)";
+                advice.innerHTML = "• <b>แผนการพยาบาล:</b> แนะนำคงการปฏิบัติตัวตามเกณฑ์เดิม ชื่นชมวินัย และนัดติดตามตามรอบ";
+            }
+        }
+
+        function renderLocalList() {
+            const listArea = document.getElementById('historyList');
+            if(currentRecords.length === 0) {
+                listArea.innerHTML = '<p class="text-center text-[11px] text-slate-400 italic py-2">ยังไม่มีการเพิ่มข้อมูล</p>';
+                return;
+            }
+
+            listArea.innerHTML = currentRecords.map((item, idx) => `
+                <div class="flex justify-between items-center bg-slate-100 p-2 rounded-xl text-xs font-mono px-4">
+                    <span class="text-slate-500 font-sans">ครั้งที่ ${idx + 1}</span>
+                    <b class="text-slate-800">${item.s}/${item.d} mmHg</b>
+                </div>
+            `).reverse().join('');
+        }
+
+        // 🌟 ฟังก์ชันสำคัญ: ลบจบในคลิกเดียว ล้างไพ่ต้อนรับผู้ป่วยรายต่อไปทันที
+        function clearAllData() {
+            currentRecords = [];
+            document.getElementById('avgDisplay').innerText = "--/--";
+            document.getElementById('countRecords').innerText = "จำนวนบันทึกปัจจุบัน: 0 ค่า";
+            document.getElementById('sysIn').value = '';
+            document.getElementById('diaIn').value = '';
+            document.getElementById('evalArea').classList.add('hidden');
+            renderLocalList();
+            document.getElementById('sysIn').focus();
+        }
+    </script>
+</body>
+</html>
